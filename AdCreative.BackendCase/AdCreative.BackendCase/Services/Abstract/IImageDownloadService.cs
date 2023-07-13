@@ -12,6 +12,6 @@
 
         Task DownloadImagesAsync(int numberOfImagesToDownload, int maximumParallelDownloadlimit, string outputPath, string imageUrl, CancellationToken cancellationToken);
 
-        void CancelDownloadImages(string outputPath);
+        void CancelDownloadImages(CancellationTokenSource cancellationTokenSource, string outputPath);
     }
 }

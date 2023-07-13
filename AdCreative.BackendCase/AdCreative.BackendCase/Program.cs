@@ -1,5 +1,6 @@
 ﻿using AdCreative.BackendCase.Services.Abstract;
 using AdCreative.BackendCase.Services.Concrete;
+using EasyRetry;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 
@@ -14,7 +15,9 @@ namespace AdCreative.BackendCase
         private const string _waitInputText = "< ";
         private const string _waitInputTextWithEnter = "< ⏎";
 
-        private const string _imageUrl = "https://www.google.com/images/branding/googlelogo/1x/googlelogo_light_color_272x92dp.png";
+        //private const string _imageUrl = "https://www.google.com/images/branding/googlelogo/1x/googlelogo_light_color_272x92dp.png";
+
+        private const string _imageUrl = "https://picsum.photos/200/300";
 
         private static ServiceProvider? _serviceProvider;
 
@@ -67,6 +70,7 @@ namespace AdCreative.BackendCase
         {
             _serviceProvider = new ServiceCollection()
                 .AddSingleton<IImageDownloadService, ImageDownloadService>()
+                .AddSingleton<IEasyRetry>( new EasyRetry.EasyRetry())
                 .BuildServiceProvider();
         }
 

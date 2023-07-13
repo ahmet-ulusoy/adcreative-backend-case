@@ -1,4 +1,5 @@
 ﻿using AdCreative.BackendCase.Services.Abstract;
+using EasyRetry;
 
 namespace AdCreative.BackendCase.Services.Concrete
 {
@@ -21,6 +22,23 @@ namespace AdCreative.BackendCase.Services.Concrete
         private const string _defaultPath = "./outputs";
 
         private int _downloadedFileCount = 1;
+
+        private readonly object _downloadedFileCountLocker = new();
+
+        private readonly IEasyRetry _easyRetry;
+
+        public ImageDownloadService(IEasyRetry easyRetry) 
+        {
+            _easyRetry = easyRetry;
+        }
+
+        public int DownloadedFileCount
+        {
+            get { lock (_downloadedFileCountLocker) { return _downloadedFileCount; } }
+            set { lock (_downloadedFileCountLocker) { _downloadedFileCount = value; } }
+        }
+
+        private int _numberOfImagesToDownload;
 
         public int GetNumberOfImagesToDownload()
         {
@@ -102,6 +120,8 @@ namespace AdCreative.BackendCase.Services.Concrete
                 throw new ArgumentNullException(nameof(maximumParallelDownloadlimit), $"{nameof(maximumParallelDownloadlimit)} can't be less than {_validValue}.");
             }
 
+            _numberOfImagesToDownload = numberOfImagesToDownload;
+
             Console.WriteLine($"{_startToDownloadImagesMessage}", numberOfImagesToDownload, maximumParallelDownloadlimit);
 
             Console.WriteLine();
@@ -116,11 +136,50 @@ namespace AdCreative.BackendCase.Services.Concrete
 
             //await DownloadImageAsync(outputPath, 1, "png", imageUrl);
 
-            Task[] tasks = new Task[1];
+            //Task[] tasks = new Task[1];
 
-            tasks[0] = Task.Run(async () => { await DownloadImageAsync(outputPath, 1, "png", imageUrl); }, cancellationToken).ContinueWith(async continuationFunction => { await UpdateDownloadedFileCount(numberOfImagesToDownload); }, cancellationToken);
+            //tasks[0] = Task.Run(async () => { await _easyRetry.Retry(async () => await DownloadImageAsync(outputPath, 1, "png", imageUrl)).WaitAsync(CancellationToken.None); }, cancellationToken).ContinueWith(async continuationFunction => { await UpdateDownloadedFileCount(); }, CancellationToken.None);
 
-            await Task.WhenAll(tasks);
+            //await Task.WhenAll(tasks);
+
+            int div = numberOfImagesToDownload / maximumParallelDownloadlimit;
+
+            int mod = numberOfImagesToDownload % maximumParallelDownloadlimit;
+
+            var counter = 0;
+
+            // actually I can use parallel foreach but you don't want to use type of a list
+            for (var i = 0; i < numberOfImagesToDownload; i += maximumParallelDownloadlimit)
+            {
+                Task[] tasks;
+
+                if (counter == div && mod != 0)
+                {
+                    tasks = new Task[mod];
+
+                    for (var j = 0; j < mod; j++)
+                    {
+                        var filExtension = i + j + 1;
+
+                        tasks[j] = Task.Run(async () => { await _easyRetry.Retry(async () => await DownloadImageAsync(outputPath, filExtension, "png", imageUrl)).WaitAsync(CancellationToken.None); }, cancellationToken).ContinueWith(async continuationFunction => { await UpdateDownloadedFileCount(); }, CancellationToken.None);
+                    }
+                }
+                else
+                {
+                    tasks = new Task[maximumParallelDownloadlimit];
+
+                    for (var j = 0; j < maximumParallelDownloadlimit; j++)
+                    {
+                        var filExtension = i + j + 1;
+
+                        tasks[j] = Task.Run(async () => { await _easyRetry.Retry(async () => await DownloadImageAsync(outputPath, filExtension, "png", imageUrl)).WaitAsync(CancellationToken.None); }, cancellationToken).ContinueWith(async continuationFunction => { await UpdateDownloadedFileCount(); }, CancellationToken.None);
+                    }
+                }
+
+                await Task.WhenAll(tasks).WaitAsync(CancellationToken.None);
+
+                counter++;
+            }
         }
 
         private static async Task DownloadImageAsync(string outputPath, int fileNumber, string fileExtension, string uri)
@@ -129,19 +188,23 @@ namespace AdCreative.BackendCase.Services.Concrete
 
             var path = Path.Combine(outputPath, $"{fileNumber}.{fileExtension}");
 
-            await File.WriteAllBytesAsync(path, await httpClient.GetByteArrayAsync(uri));
+            var bytes = await httpClient.GetByteArrayAsync(uri).WaitAsync(CancellationToken.None);
+
+            await File.WriteAllBytesAsync(path, bytes).WaitAsync(CancellationToken.None);
         }
 
-        private async Task UpdateDownloadedFileCount(int numberOfImagesToDownload)
+        private async Task UpdateDownloadedFileCount()
         {
-            Console.Write($"\r{_downloadeImageMessage}", _downloadedFileCount, numberOfImagesToDownload);
-            _downloadedFileCount++;
+            Console.Write($"\r{_downloadeImageMessage}", DownloadedFileCount, _numberOfImagesToDownload);
+            DownloadedFileCount++;
             await Task.Delay(1);
         }
 
-        public void CancelDownloadImages(string outputPath)
+        public void CancelDownloadImages(CancellationTokenSource cancellationTokenSource, string outputPath)
         {
-            throw new NotImplementedException();
+            cancellationTokenSource.Cancel();
+
+            Array.ForEach(Directory.GetFiles(outputPath), File.Delete);
         }
     }
 }
