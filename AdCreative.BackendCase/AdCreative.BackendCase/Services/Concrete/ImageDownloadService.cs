@@ -10,6 +10,7 @@ namespace AdCreative.BackendCase.Services.Concrete
         private const string _numberOfImagesToDownloadMessage = "Enter the number of images to download:";
         private const string _maximumParallelDownloadlimitMessage = "Enter the maximum parallel download limit:";
         private const string _savePathMessage = "Enter the save path (default: ./outputs)";
+        private const string _startToDownloadImagesMessage = "Downloading {0} images ({1} parallel downloads at most)";
 
         private const string _waitInputText = "< ";
         private const string _waitInputTextWithEnterIcon = "< ⏎";
@@ -86,7 +87,21 @@ namespace AdCreative.BackendCase.Services.Concrete
 
         public void StartToDownloadImages(int numberOfImagesToDownload, int maximumParallelDownloadlimit)
         {
-            throw new NotImplementedException();
+            Console.WriteLine();
+
+            if (numberOfImagesToDownload < _validValue)
+            {
+                throw new ArgumentNullException(nameof(numberOfImagesToDownload), $"{nameof(numberOfImagesToDownload)} can't be less than {_validValue}.");
+            }
+
+            if (maximumParallelDownloadlimit < _validValue)
+            {
+                throw new ArgumentNullException(nameof(maximumParallelDownloadlimit), $"{nameof(maximumParallelDownloadlimit)} can't be less than {_validValue}.");
+            }
+
+            Console.WriteLine($"{_startToDownloadImagesMessage}", numberOfImagesToDownload, maximumParallelDownloadlimit);
+
+            Console.WriteLine();
         }
 
         public async Task DownloadImagesAsync(int numberOfImagesToDownload, int maximumParallelDownloadlimit, string outputPath, string imageUrl)

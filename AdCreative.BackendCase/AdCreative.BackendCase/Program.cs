@@ -45,6 +45,8 @@ namespace AdCreative.BackendCase
                 string path = _imageDownloadService.GetSavePath();
 
                 Console.WriteLine(path);
+
+                _imageDownloadService.StartToDownloadImages(numberOfImagesToDownload, maximumParallelDownloadlimit);
             }
 
             await Task.CompletedTask;
