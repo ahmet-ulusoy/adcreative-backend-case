@@ -10,7 +10,7 @@
 
         void StartToDownloadImages(int numberOfImagesToDownload, int maximumParallelDownloadlimit);
 
-        Task DownloadImagesAsync(int numberOfImagesToDownload, int maximumParallelDownloadlimit, string outputPath, string imageUrl);
+        Task DownloadImagesAsync(int numberOfImagesToDownload, int maximumParallelDownloadlimit, string outputPath, string imageUrl, CancellationToken cancellationToken);
 
         void CancelDownloadImages(string outputPath);
     }

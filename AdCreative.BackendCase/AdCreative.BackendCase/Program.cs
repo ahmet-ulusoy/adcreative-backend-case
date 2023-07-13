@@ -20,6 +20,10 @@ namespace AdCreative.BackendCase
 
         private static IImageDownloadService? _imageDownloadService;
 
+        private static readonly CancellationTokenSource _cancellationTokenSource = new();
+
+        private static readonly CancellationToken _cancellationToken = _cancellationTokenSource.Token;
+
         public static async Task Main(string[] args)
         {
             PreInitialization();
@@ -48,7 +52,7 @@ namespace AdCreative.BackendCase
 
                 _imageDownloadService.StartToDownloadImages(numberOfImagesToDownload, maximumParallelDownloadlimit);
 
-                await _imageDownloadService.DownloadImagesAsync(numberOfImagesToDownload, maximumParallelDownloadlimit, path, _imageUrl);
+                await _imageDownloadService.DownloadImagesAsync(numberOfImagesToDownload, maximumParallelDownloadlimit, path, _imageUrl, _cancellationToken);
             }
 
             await Task.CompletedTask;

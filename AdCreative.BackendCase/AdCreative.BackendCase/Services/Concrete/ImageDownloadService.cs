@@ -104,11 +104,20 @@ namespace AdCreative.BackendCase.Services.Concrete
             Console.WriteLine();
         }
 
-        public async Task DownloadImagesAsync(int numberOfImagesToDownload, int maximumParallelDownloadlimit, string outputPath, string imageUrl)
+        public async Task DownloadImagesAsync(int numberOfImagesToDownload, int maximumParallelDownloadlimit, string outputPath, string imageUrl, CancellationToken cancellationToken)
         {
-            Directory.CreateDirectory(outputPath);
+            if (!Directory.Exists(outputPath))
+            {
+                Directory.CreateDirectory(outputPath);
+            }
 
-            await DownloadImageAsync(outputPath, 1, "png", imageUrl);
+            //await DownloadImageAsync(outputPath, 1, "png", imageUrl);
+
+            Task[] tasks = new Task[1];
+
+            tasks[0] = Task.Run(async () => { await DownloadImageAsync(outputPath, 1, "png", imageUrl); }, cancellationToken);
+
+            await Task.WhenAll(tasks);
         }
 
         private static async Task DownloadImageAsync(string outputPath, int fileNumber, string fileExtension, string uri)
