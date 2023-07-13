@@ -1,8 +1,10 @@
 ﻿using AdCreative.BackendCase.Services.Abstract;
 using AdCreative.BackendCase.Services.Concrete;
+using AdCreative.BackendCase.Utilities;
 using EasyRetry;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text;
+using System.Text.Json;
 
 namespace AdCreative.BackendCase
 {
@@ -14,6 +16,7 @@ namespace AdCreative.BackendCase
 
         private const string _waitInputText = "< ";
         private const string _waitInputTextWithEnter = "< ⏎";
+        private const string _inputFileName = "Input.json";
 
         //private const string _imageUrl = "https://www.google.com/images/branding/googlelogo/1x/googlelogo_light_color_272x92dp.png";
 
@@ -27,9 +30,13 @@ namespace AdCreative.BackendCase
 
         private static readonly CancellationToken _cancellationToken = _cancellationTokenSource.Token;
 
+        private static Input? _input;
+
         public static async Task Main(string[] args)
         {
             PreInitialization();
+
+            LoadJson();
 
             RegisterServices();
 
@@ -41,21 +48,19 @@ namespace AdCreative.BackendCase
 
             if (_imageDownloadService != null)
             {
-                int numberOfImagesToDownload = _imageDownloadService.GetNumberOfImagesToDownload();
+                if (_input == null)
+                {
+                    _input = new Input
+                    {
+                        Count = _imageDownloadService.GetNumberOfImagesToDownload(),
+                        Parallelism = _imageDownloadService.GetMaximumParallelDownloadlimit(),
+                        SavePath = _imageDownloadService.GetSavePath()
+                    };
+                }
 
-                Console.WriteLine(numberOfImagesToDownload);
+                _imageDownloadService.StartToDownloadImages(_input.Count, _input.Parallelism);
 
-                int maximumParallelDownloadlimit = _imageDownloadService.GetMaximumParallelDownloadlimit();
-
-                Console.WriteLine(maximumParallelDownloadlimit);
-
-                string path = _imageDownloadService.GetSavePath();
-
-                Console.WriteLine(path);
-
-                _imageDownloadService.StartToDownloadImages(numberOfImagesToDownload, maximumParallelDownloadlimit);
-
-                await _imageDownloadService.DownloadImagesAsync(numberOfImagesToDownload, maximumParallelDownloadlimit, path, _imageUrl, _cancellationToken);
+                await _imageDownloadService.DownloadImagesAsync(_input.Count, _input.Parallelism, _input.SavePath, _imageUrl, _cancellationToken);
             }
 
             await Task.CompletedTask;
@@ -84,6 +89,16 @@ namespace AdCreative.BackendCase
                 {
                     throw new InvalidOperationException($"{nameof(_imageDownloadService)} is null.");
                 }
+            }
+        }
+
+        private static void LoadJson()
+        {
+            string inputAsJsonString = File.ReadAllText(Path.Combine("..\\..\\..\\",_inputFileName));
+
+            if (!string.IsNullOrEmpty(inputAsJsonString))
+            {
+                _input = JsonSerializer.Deserialize<Input>(inputAsJsonString);
             }
         }
     }
