@@ -9,10 +9,14 @@ namespace AdCreative.BackendCase.Services.Concrete
 
         private const string _numberOfImagesToDownloadMessage = "Enter the number of images to download:";
         private const string _maximumParallelDownloadlimitMessage = "Enter the maximum parallel download limit:";
+        private const string _savePathMessage = "Enter the save path (default: ./outputs)";
 
         private const string _waitInputText = "< ";
+        private const string _waitInputTextWithEnterIcon = "< ⏎";
 
         private const int _validValue = 1;
+
+        private const string _defaultPath = "./outputs";
 
         public int GetNumberOfImagesToDownload()
         {
@@ -66,7 +70,18 @@ namespace AdCreative.BackendCase.Services.Concrete
 
         public string GetSavePath()
         {
-            throw new NotImplementedException();
+            Console.WriteLine($"{_savePathMessage}");
+
+            Console.Write($"{_waitInputTextWithEnterIcon}");
+
+            var input = Console.ReadLine();
+
+            if (string.IsNullOrEmpty(input))
+            {
+                return _defaultPath;
+            }
+
+            return input;
         }
 
         public void StartToDownloadImages(int numberOfImagesToDownload, int maximumParallelDownloadlimit)

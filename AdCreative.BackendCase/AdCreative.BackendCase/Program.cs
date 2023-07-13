@@ -41,6 +41,10 @@ namespace AdCreative.BackendCase
                 int maximumParallelDownloadlimit = _imageDownloadService.GetMaximumParallelDownloadlimit();
 
                 Console.WriteLine(maximumParallelDownloadlimit);
+
+                string path = _imageDownloadService.GetSavePath();
+
+                Console.WriteLine(path);
             }
 
             await Task.CompletedTask;
