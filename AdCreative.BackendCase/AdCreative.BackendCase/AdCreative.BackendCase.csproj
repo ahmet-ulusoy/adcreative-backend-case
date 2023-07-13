@@ -7,4 +7,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\Abstract\" />
+    <Folder Include="Services\Concrete\" />
+  </ItemGroup>
+
 </Project>
