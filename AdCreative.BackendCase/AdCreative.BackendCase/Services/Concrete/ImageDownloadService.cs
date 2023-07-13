@@ -8,6 +8,7 @@ namespace AdCreative.BackendCase.Services.Concrete
         private const string _inputIntegerCanNotBeLessThanOneValidationMessage = "Given input can't be less than {0}.";
 
         private const string _numberOfImagesToDownloadMessage = "Enter the number of images to download:";
+        private const string _maximumParallelDownloadlimitMessage = "Enter the maximum parallel download limit:";
 
         private const string _waitInputText = "< ";
 
@@ -40,7 +41,27 @@ namespace AdCreative.BackendCase.Services.Concrete
 
         public int GetMaximumParallelDownloadlimit()
         {
-            throw new NotImplementedException();
+            Console.WriteLine($"{_maximumParallelDownloadlimitMessage}");
+
+            Console.Write($"{_waitInputText}");
+
+            var input = Console.ReadLine();
+
+            bool result = int.TryParse(input, out var maximumParallelDownloadlimit);
+
+            if (!result)
+            {
+                Console.WriteLine($"{_inputErrorMessage}");
+                return GetMaximumParallelDownloadlimit();
+            }
+
+            if (maximumParallelDownloadlimit < _validValue)
+            {
+                Console.WriteLine($"{_inputIntegerCanNotBeLessThanOneValidationMessage}", _validValue);
+                return GetMaximumParallelDownloadlimit();
+            }
+
+            return maximumParallelDownloadlimit;
         }
 
         public string GetSavePath()

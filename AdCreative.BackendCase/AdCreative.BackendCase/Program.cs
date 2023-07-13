@@ -34,11 +34,13 @@ namespace AdCreative.BackendCase
 
             if (_imageDownloadService != null)
             {
-                int numberOfImagesToDownload;
-
-                numberOfImagesToDownload = _imageDownloadService.GetNumberOfImagesToDownload();
+                int numberOfImagesToDownload = _imageDownloadService.GetNumberOfImagesToDownload();
 
                 Console.WriteLine(numberOfImagesToDownload);
+
+                int maximumParallelDownloadlimit = _imageDownloadService.GetMaximumParallelDownloadlimit();
+
+                Console.WriteLine(maximumParallelDownloadlimit);
             }
 
             await Task.CompletedTask;
