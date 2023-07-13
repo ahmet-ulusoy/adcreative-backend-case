@@ -106,9 +106,18 @@ namespace AdCreative.BackendCase.Services.Concrete
 
         public async Task DownloadImagesAsync(int numberOfImagesToDownload, int maximumParallelDownloadlimit, string outputPath, string imageUrl)
         {
-            await Task.CompletedTask;
+            Directory.CreateDirectory(outputPath);
 
-            throw new NotImplementedException();
+            await DownloadImageAsync(outputPath, 1, "png", imageUrl);
+        }
+
+        private static async Task DownloadImageAsync(string outputPath, int fileNumber, string fileExtension, string uri)
+        {
+            using var httpClient = new HttpClient();
+
+            var path = Path.Combine(outputPath, $"{fileNumber}.{fileExtension}");
+
+            await File.WriteAllBytesAsync(path, await httpClient.GetByteArrayAsync(uri));
         }
 
         public void CancelDownloadImages(string outputPath)
