@@ -1,7 +1,6 @@
 ﻿using AdCreative.BackendCase.Services.Abstract;
 using AdCreative.BackendCase.Services.Concrete;
 using Microsoft.Extensions.DependencyInjection;
-using System.Net;
 using System.Text;
 
 namespace AdCreative.BackendCase
@@ -32,6 +31,15 @@ namespace AdCreative.BackendCase
             Console.WriteLine($"{_initialText}:");
             Console.WriteLine($"{_messageOne}");
             Console.WriteLine($"{_messageTwo}");
+
+            if (_imageDownloadService != null)
+            {
+                int numberOfImagesToDownload;
+
+                numberOfImagesToDownload = _imageDownloadService.GetNumberOfImagesToDownload();
+
+                Console.WriteLine(numberOfImagesToDownload);
+            }
 
             await Task.CompletedTask;
         }
