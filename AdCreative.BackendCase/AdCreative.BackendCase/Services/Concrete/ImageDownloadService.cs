@@ -11,6 +11,7 @@ namespace AdCreative.BackendCase.Services.Concrete
         private const string _maximumParallelDownloadlimitMessage = "Enter the maximum parallel download limit:";
         private const string _savePathMessage = "Enter the save path (default: ./outputs)";
         private const string _startToDownloadImagesMessage = "Downloading {0} images ({1} parallel downloads at most)";
+        private const string _downloadeImageMessage = "Progress: {0}/{1}";
 
         private const string _waitInputText = "< ";
         private const string _waitInputTextWithEnterIcon = "< ⏎";
@@ -18,6 +19,8 @@ namespace AdCreative.BackendCase.Services.Concrete
         private const int _validValue = 1;
 
         private const string _defaultPath = "./outputs";
+
+        private int _downloadedFileCount = 1;
 
         public int GetNumberOfImagesToDownload()
         {
@@ -115,7 +118,7 @@ namespace AdCreative.BackendCase.Services.Concrete
 
             Task[] tasks = new Task[1];
 
-            tasks[0] = Task.Run(async () => { await DownloadImageAsync(outputPath, 1, "png", imageUrl); }, cancellationToken);
+            tasks[0] = Task.Run(async () => { await DownloadImageAsync(outputPath, 1, "png", imageUrl); }, cancellationToken).ContinueWith(async continuationFunction => { await UpdateDownloadedFileCount(numberOfImagesToDownload); }, cancellationToken);
 
             await Task.WhenAll(tasks);
         }
@@ -127,6 +130,13 @@ namespace AdCreative.BackendCase.Services.Concrete
             var path = Path.Combine(outputPath, $"{fileNumber}.{fileExtension}");
 
             await File.WriteAllBytesAsync(path, await httpClient.GetByteArrayAsync(uri));
+        }
+
+        private async Task UpdateDownloadedFileCount(int numberOfImagesToDownload)
+        {
+            Console.Write($"\r{_downloadeImageMessage}", _downloadedFileCount, numberOfImagesToDownload);
+            _downloadedFileCount++;
+            await Task.Delay(1);
         }
 
         public void CancelDownloadImages(string outputPath)
